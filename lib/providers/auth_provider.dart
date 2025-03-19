@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../services/snackbar_service.dart';
+import '../services/navigation_service.dart';
 
 enum AuthStatus {
   NotAuthenticated,
@@ -15,7 +17,7 @@ enum AuthStatus {
 
 class AuthProvider extends ChangeNotifier {
   late AuthStatus status;
-  late User user;
+  late User? user;
   late FirebaseAuth _auth;
 
   static AuthProvider instance = AuthProvider();
@@ -35,19 +37,65 @@ class AuthProvider extends ChangeNotifier {
           email: _email, password: _password);
       user = _userCredential.user!;
       status = AuthStatus.Authenticated;
+      Fluttertoast.showToast(
+        msg: "${user!.email} Logged In Successfully",
+      );
       SnackBarService.instance
-          .showSnackBarSuccess("${user.email} Logged In Successfully");
-      SnackBarService.instance.showSnackBarSuccess("Welcome to BanterHub");
-      print("logged in successfully");
+          .showSnackBarSuccess("${user!.email} Logged In Successfully");
+      SnackBarService.instance
+          .showSnackBarSuccess("Welcome, ${user!.email} to BanterHub");
+      // update lastSeen time
       // Navigate to the home page
-      // Navigator.pushReplacementNamed(context, '/home');
+      NavigationService.instance.navigateToReplacment("home");
     } catch (e) {
       status = AuthStatus.Error;
-      SnackBarService.instance.showSnackBarError("Error while Authenticating");
-      // Fluttertoast.showToast(msg: "Error While Authenticating");
+      // SnackBarService.instance.showSnackBarError("Error while Authenticating");
+      user = null;
+      Fluttertoast.showToast(
+        msg: "Error While Authenticating",
+      );
       print("login error");
       print('Failed to sign in: $e');
     }
     notifyListeners();
   }
+
+  void registerUserWithEmailAndPassword(
+    String _email,
+    String _password,
+    Future<void> onSuccess(String _uid),
+  ) async {
+    status = AuthStatus.Authenticating;
+    notifyListeners();
+    try {
+      UserCredential _userCredential = await _auth
+          .createUserWithEmailAndPassword(email: _email, password: _password);
+      user = _userCredential.user!;
+      status = AuthStatus.Authenticated;
+      await onSuccess(user!.uid);
+      SnackBarService.instance.showSnackBarError("Welcome, ${user!.email}");
+      // update lastSeen time
+      NavigationService.instance.goBack();
+      // navigate to home page
+      NavigationService.instance.navigateToReplacment("home");
+    } catch (e) {
+      status = AuthStatus.Error;
+      user = null;
+      // SnackBarService.instance.showSnackBarError("Error while Authenticating");
+      Fluttertoast.showToast(
+        msg: "Error Registering User",
+      );
+    }
+    notifyListeners();
+  }
 }
+
+
+// Fluttertoast.showToast(
+//   msg: "Welcome to BanterHub",
+//   toastLength: Toast.LENGTH_SHORT,
+//   gravity: ToastGravity.BOTTOM,
+//   backgroundColor: Colors.green,
+//   textColor: Colors.white,
+//   fontSize: 16.0,
+// );

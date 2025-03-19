@@ -1,11 +1,17 @@
 // ignore_for_file: avoid_unnecessary_containers, no_leading_underscores_for_local_identifiers, sized_box_for_whitespace
 
 import 'dart:io';
-
+import 'package:banterhub/services/appWrite_cloud_storage_service.dart';
+import 'package:banterhub/services/appWrite_db_service.dart';
+import 'package:banterhub/services/db_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
+import '../providers/auth_provider.dart';
 import '../services/navigation_service.dart';
-import "../services/media_service.dart";
+import '../services/media_service.dart';
+import '../services/cloud_storage_service.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -19,12 +25,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
   late double _deviceWidth;
 
   late GlobalKey<FormState> _formKey;
+  late AuthProvider _auth;
+
+  late String _name;
+  late String _email;
+  late String _password;
 
   late File? _image;
 
   _RegistrationPageState() {
     _formKey = GlobalKey<FormState>();
     _image = null;
+    _name = "";
+    _email = "";
+    _password = "";
   }
 
   @override
@@ -37,7 +51,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: _registrationPageUI(),
+            child: ChangeNotifierProvider<AuthProvider>.value(
+              value: AuthProvider.instance,
+              child: _registrationPageUI(),
+            ),
           ),
         ),
       ),
@@ -45,28 +62,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Widget _registrationPageUI() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 30,
+    return Builder(
+      builder: (BuildContext _context) {
+        _auth = Provider.of<AuthProvider>(_context);
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 30,
+              ),
+              _headingWidget(),
+              _spacer(_deviceHeight * 0.03),
+              _inputFields(),
+              _spacer(_deviceHeight * 0.03),
+              _registerPageButtons(),
+              SizedBox(
+                height: 30,
+              ),
+            ],
           ),
-          // Heading Section
-          _headingWidget(),
-          // Adding dynamic space between sections
-          _spacer(_deviceHeight * 0.03),
-          // Input Fields Section
-          _inputFields(),
-          _spacer(_deviceHeight * 0.03),
-          // Register Button Section
-          _registerPageButtons(),
-          SizedBox(
-            height: 30,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -132,15 +150,31 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Widget _inputFields() {
-    return Column(
-      children: [
-        _nameTextField(),
-        _spacer(16.0),
-        _emailTextField(),
-        _spacer(16.0),
-        _passwordTextField(),
-      ],
+    return Form(
+      key: _formKey,
+      onChanged: () {
+        _formKey.currentState?.save();
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _nameTextField(),
+          _spacer(16.0),
+          _emailTextField(),
+          _spacer(16.0),
+          _passwordTextField(),
+        ],
+      ),
     );
+    // return Column(
+    //   children: [
+    //     _nameTextField(),
+    //     _spacer(16.0),
+    //     _emailTextField(),
+    //     _spacer(16.0),
+    //     _passwordTextField(),
+    //   ],
+    // );
   }
 
   Widget _nameTextField() {
@@ -150,7 +184,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       validator: (_input) {
         return _input!.isNotEmpty ? null : "Please Enter Name";
       },
-      onSaved: (_input) {},
+      onSaved: (_input) {
+        setState(() {
+          _name = _input!;
+        });
+      },
       cursorColor: Colors.white,
       decoration: InputDecoration(
         hintText: "Enter name",
@@ -170,12 +208,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
     return TextFormField(
       autocorrect: false,
       style: TextStyle(color: Colors.white),
+      keyboardType: TextInputType.emailAddress,
       validator: (_input) {
         return _input!.isNotEmpty && _input.contains("@")
             ? null
             : "Please Enter Email";
       },
-      onSaved: (_input) {},
+      onSaved: (_input) {
+        setState(() {
+          _email = _input!;
+        });
+      },
       cursorColor: Colors.black,
       decoration: InputDecoration(
         hintText: "Enter email",
@@ -199,7 +242,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       validator: (_input) {
         return _input!.isNotEmpty ? null : "Please Enter Password";
       },
-      onSaved: (_input) {},
+      onSaved: (_input) {
+        setState(() {
+          _password = _input!;
+        });
+      },
       cursorColor: Colors.black,
       decoration: InputDecoration(
         hintText: "Enter password",
@@ -219,22 +266,74 @@ class _RegistrationPageState extends State<RegistrationPage> {
     return Center(
       child: Column(
         children: [
-          Container(
-            height: (_deviceHeight > _deviceWidth)
-                ? _deviceHeight * 0.06
-                : _deviceWidth * 0.06,
-            width: _deviceWidth,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+          _auth.status != AuthStatus.Authenticating
+              ? Container(
+                  height: (_deviceHeight > _deviceWidth)
+                      ? _deviceHeight * 0.06
+                      : _deviceWidth * 0.06,
+                  width: _deviceWidth,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      print("i pressed");
+
+                      if (_formKey.currentState?.validate() == true) {
+                        print("i am here");
+
+                        if (_image == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please upload an image'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        print("photo is uploaded");
+
+                        // ✅ Step 1: Register the user in Firebase
+                        _auth.registerUserWithEmailAndPassword(
+                          _email,
+                          _password,
+                          (String _uid) async {
+                            // ✅ Step 2: Upload Image to Appwrite Storage
+                            var _imageURL = await AppWriteStorageService
+                                .instance
+                                .uploadUserImageToAppWrite(_uid, _image!);
+
+                            if (_imageURL == null) {
+                              Fluttertoast.showToast(
+                                  msg: "Image upload failed. Try again.");
+                              _imageURL = "";
+                            }
+
+                            // ✅ Step 3: Create User in Appwrite Database
+                            await AppWriteDBService.instance
+                                .createUserInAppWriteDB(
+                              _uid,
+                              _name,
+                              _email,
+                              _imageURL.toString(),
+                            );
+
+                            Fluttertoast.showToast(
+                                msg: "Registration Successful!");
+                            print("✅ Registration Completed");
+                          },
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: Text("Register"),
+                  ),
+                )
+              : const Center(
+                  child: CircularProgressIndicator(),
                 ),
-              ),
-              child: Text("Register"),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.only(top: 16.0),
             child: GestureDetector(

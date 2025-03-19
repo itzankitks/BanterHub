@@ -68,9 +68,15 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            SizedBox(
+              height: 30,
+            ),
             _headingWidget(),
             _inputFields(),
             _logInPageButtons(),
+            SizedBox(
+              height: 30,
+            ),
           ],
         );
       },
@@ -176,6 +182,10 @@ class _LoginPageState extends State<LoginPage> {
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Colors.red, width: 2),
       ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
     );
   }
 
@@ -222,13 +232,17 @@ class _LoginPageState extends State<LoginPage> {
       onTap: () {
         NavigationService.instance.navigateTo("register");
       },
-      child: Center(
-        child: Text(
-          "REGISTER",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white60,
+      child: Container(
+        color: Colors.transparent,
+        child: Center(
+          child: Text(
+            "REGISTER",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white60,
+              // backgroundColor: Colors.red,
+            ),
           ),
         ),
       ),
