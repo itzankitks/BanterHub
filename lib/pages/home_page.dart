@@ -12,7 +12,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text(
+          "BanterHub",
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
       body: Center(
         child: Text("Home Page"),
       ),

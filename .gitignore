@@ -70,3 +70,4 @@ web/.dart_tool/
 # Important Files
 /lib/firebase_options.dart
 firebase.json
+/lib/app_config.dart

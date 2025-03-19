@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 

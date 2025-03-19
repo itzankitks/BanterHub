@@ -45,6 +45,7 @@ class AuthProvider extends ChangeNotifier {
       SnackBarService.instance
           .showSnackBarSuccess("Welcome, ${user!.email} to BanterHub");
       // update lastSeen time
+
       // Navigate to the home page
       NavigationService.instance.navigateToReplacment("home");
     } catch (e) {
@@ -75,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
       await onSuccess(user!.uid);
       SnackBarService.instance.showSnackBarError("Welcome, ${user!.email}");
       // update lastSeen time
+
       NavigationService.instance.goBack();
       // navigate to home page
       NavigationService.instance.navigateToReplacment("home");

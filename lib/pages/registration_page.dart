@@ -1,6 +1,9 @@
-// ignore_for_file: avoid_unnecessary_containers, no_leading_underscores_for_local_identifiers, sized_box_for_whitespace
+// ignore_for_file: avoid_unnecessary_containers, no_leading_underscores_for_local_identifiers, sized_box_for_whitespace, unused_import, avoid_print
 
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:banterhub/services/appWrite_cloud_storage_service.dart';
 import 'package:banterhub/services/appWrite_db_service.dart';
 import 'package:banterhub/services/db_service.dart';
@@ -32,10 +35,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
   late String _password;
 
   late File? _image;
+  late Uint8List? _imageBytes; // For Web
+  late String uploadedImageUrl;
 
   _RegistrationPageState() {
     _formKey = GlobalKey<FormState>();
     _image = null;
+    _imageBytes = null;
+    uploadedImageUrl = "";
     _name = "";
     _email = "";
     _password = "";
@@ -107,11 +114,40 @@ class _RegistrationPageState extends State<RegistrationPage> {
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: GestureDetector(
             onTap: () async {
-              File? _imageFile =
+              var pickedFile =
                   await MediaService.instance.uploadImage("gallery");
-              setState(() {
-                _image = _imageFile != null ? File(_imageFile.path) : null;
-              });
+
+              if (pickedFile != null) {
+                print("Something is selected: ${pickedFile.runtimeType}");
+
+                if (kIsWeb) {
+                  print("Here web");
+
+                  try {
+                    Uint8List bytes =
+                        await pickedFile.readAsBytes(); // <-- Debug this line
+                    print("Web Image Picked: ${bytes.length} bytes");
+
+                    setState(() {
+                      _imageBytes = bytes;
+                      _image = null; // Ensure mobile image is null
+                    });
+                  } catch (e, stackTrace) {
+                    print("Error while reading bytes: $e");
+                    print(stackTrace);
+                  }
+                } else {
+                  print("Here mobile");
+                  print("Mobile Image Picked: ${pickedFile.path}");
+
+                  setState(() {
+                    _image = File(pickedFile.path);
+                    _imageBytes = null; // Ensure web image is null
+                  });
+                }
+              } else {
+                print("No image was selected.");
+              }
             },
             child: Center(
               child: ClipRRect(
@@ -119,7 +155,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     (_deviceWidth > _deviceHeight)
                         ? _deviceHeight / 5
                         : _deviceWidth / 5),
-                child: (_image != null)
+                child: (_image != null && !kIsWeb)
                     ? Image.file(
                         _image!,
                         width: (_deviceWidth > _deviceHeight)
@@ -130,17 +166,28 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             : _deviceWidth / 2.5,
                         fit: BoxFit.cover,
                       )
-                    : Image.network(
-                        "https://www.pngall.com/wp-content/uploads/2/Upload-PNG-Images.png",
-                        width: (_deviceWidth > _deviceHeight)
-                            ? _deviceHeight / 2.5
-                            : _deviceWidth / 2.5,
-                        height: (_deviceWidth > _deviceHeight)
-                            ? _deviceHeight / 2.5
-                            : _deviceWidth / 2.5,
-                        fit: BoxFit.cover,
-                        color: Colors.white70,
-                      ),
+                    : (_imageBytes != null && kIsWeb)
+                        ? Image.memory(
+                            _imageBytes!,
+                            width: (_deviceWidth > _deviceHeight)
+                                ? _deviceHeight / 2.5
+                                : _deviceWidth / 2.5,
+                            height: (_deviceWidth > _deviceHeight)
+                                ? _deviceHeight / 2.5
+                                : _deviceWidth / 2.5,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            "assets/images/Upload-Image.png",
+                            width: (_deviceWidth > _deviceHeight)
+                                ? _deviceHeight / 2.5
+                                : _deviceWidth / 2.5,
+                            height: (_deviceWidth > _deviceHeight)
+                                ? _deviceHeight / 2.5
+                                : _deviceWidth / 2.5,
+                            fit: BoxFit.cover,
+                            color: Colors.white70,
+                          ),
               ),
             ),
           ),
