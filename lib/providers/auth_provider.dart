@@ -55,25 +55,25 @@ class AuthProvider extends ChangeNotifier {
       UserCredential _userCredential = await _auth.signInWithEmailAndPassword(
           email: _email, password: _password);
       user = _userCredential.user!;
+      print(user);
       status = AuthStatus.Authenticated;
-      Fluttertoast.showToast(
-        msg: "${user!.email} Logged In Successfully",
-      );
       SnackBarService.instance
           .showSnackBarSuccess("${user!.email} Logged In Successfully");
-      SnackBarService.instance
-          .showSnackBarSuccess("Welcome, ${user!.email} to BanterHub");
+      Fluttertoast.showToast(
+        msg: "Welcome back, ${user!.email}",
+      );
       // update lastSeen time
 
       // Navigate to the home page
       NavigationService.instance.navigateToReplacment("home");
     } catch (e) {
       status = AuthStatus.Error;
-      // SnackBarService.instance.showSnackBarError("Error while Authenticating");
       user = null;
       Fluttertoast.showToast(
         msg: "Error While Authenticating",
       );
+      SnackBarService.instance
+          .showSnackBarError("${user!.email} Error while Authenticating");
       print("login error");
       print('Failed to sign in: $e');
     }
@@ -83,6 +83,7 @@ class AuthProvider extends ChangeNotifier {
   void registerUserWithEmailAndPassword(
     String _email,
     String _password,
+    // String _displayName,
     Future<void> onSuccess(String _uid),
   ) async {
     status = AuthStatus.Authenticating;
@@ -91,9 +92,16 @@ class AuthProvider extends ChangeNotifier {
       UserCredential _userCredential = await _auth
           .createUserWithEmailAndPassword(email: _email, password: _password);
       user = _userCredential.user!;
+
+      // Update user profile here
+      // await user!.updateProfile(displayName: _displayName);
+
       status = AuthStatus.Authenticated;
       await onSuccess(user!.uid);
-      SnackBarService.instance.showSnackBarError("Welcome, ${user!.email}");
+      SnackBarService.instance.showSnackBarSuccess("Registed successfully");
+      Fluttertoast.showToast(
+        msg: "Welcome to BanterHub",
+      );
       // update lastSeen time
 
       NavigationService.instance.goBack();
@@ -102,10 +110,27 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       status = AuthStatus.Error;
       user = null;
-      // SnackBarService.instance.showSnackBarError("Error while Authenticating");
+      SnackBarService.instance.showSnackBarError("Error Registering User");
       Fluttertoast.showToast(
         msg: "Error Registering User",
       );
+    }
+    notifyListeners();
+  }
+
+  void logoutUser(Future<void>? onSuccess()) async {
+    try {
+      await _auth.signOut();
+      user = null;
+      status = AuthStatus.NotAuthenticated;
+      await onSuccess();
+      NavigationService.instance.navigateToReplacment("login");
+      Fluttertoast.showToast(
+        msg: "Logged out successfully",
+      );
+      SnackBarService.instance.showSnackBarSuccess("Logged out successfully");
+    } catch (e) {
+      SnackBarService.instance.showSnackBarError("Error logging out");
     }
     notifyListeners();
   }

@@ -1,13 +1,16 @@
 // ignore_for_file: unused_import, prefer_final_fields, no_leading_underscores_for_local_identifiers, avoid_print
 
-import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart' as models;
+import 'dart:async';
+
 import 'package:banterhub/app_config.dart';
+import 'package:appwrite/appwrite.dart';
+// import 'package:appwrite/models.dart' as models;
+import '../models/appwrite_contact.dart';
 
 class AppWriteDBService {
   static AppWriteDBService instance = AppWriteDBService();
 
-  late Databases _db;
+  late Databases _appWriteDB;
   late Client _client;
 
   AppWriteDBService() {
@@ -15,11 +18,10 @@ class AppWriteDBService {
         .setEndpoint(AppConfig.appwriteEndpoint)
         .setProject(AppConfig.appwriteProjectId);
 
-    _db = Databases(_client);
+    _appWriteDB = Databases(_client);
   }
 
   String _databaseId = AppConfig.appwriteDatabaseId;
-  // String _userCollectionId = '67e8d2f90012600185b1';
   String _userCollectionId = AppConfig.appwriteUsersCollectionId;
 
   Future<bool> createUserInAppWriteDB(
@@ -29,7 +31,7 @@ class AppWriteDBService {
     String _imageURL,
   ) async {
     try {
-      await _db.createDocument(
+      await _appWriteDB.createDocument(
         databaseId: _databaseId,
         collectionId: _userCollectionId,
         documentId: _uid,
@@ -47,5 +49,31 @@ class AppWriteDBService {
       print("❌ Error creating user in DB: $e");
       return false;
     }
+  }
+
+  Stream<AppwriteContact> getAppWriteUserData(String _userID) {
+    // Creating a StreamController to emit updates to the Stream
+    final StreamController<AppwriteContact> _controller =
+        StreamController<AppwriteContact>();
+
+    Future<void> _fetchData() async {
+      try {
+        final response = await _appWriteDB.getDocument(
+          databaseId: _databaseId,
+          collectionId: _userCollectionId,
+          documentId: _userID,
+        );
+        _controller.sink.add(AppwriteContact.fromAppwrite(response));
+      } catch (e) {
+        _controller.sink.addError(e);
+      }
+    }
+
+    // Periodically fetch the data (e.g., every 5 seconds)
+    // Timer.periodic(Duration(seconds: 5), (_) {
+    _fetchData();
+    // });
+
+    return _controller.stream;
   }
 }
