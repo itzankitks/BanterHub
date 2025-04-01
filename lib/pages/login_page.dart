@@ -65,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
         SnackBarService.instance.buildContext = _context;
         _auth = Provider.of<AuthProvider>(_context);
         return Column(
+          spacing: _deviceWidth < _deviceHeight ? 0 : 20,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -90,7 +91,9 @@ class _LoginPageState extends State<LoginPage> {
         Text(
           "Welcome Back!",
           style: TextStyle(
-            fontSize: _deviceWidth * 0.1,
+            fontSize: _deviceWidth < _deviceHeight
+                ? _deviceWidth * 0.1
+                : _deviceHeight * 0.1,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -98,7 +101,9 @@ class _LoginPageState extends State<LoginPage> {
         Text(
           "Please Login to your account",
           style: TextStyle(
-            fontSize: _deviceWidth * 0.04,
+            fontSize: _deviceWidth < _deviceHeight
+                ? _deviceWidth * 0.04
+                : _deviceHeight * 0.04,
             fontWeight: FontWeight.w200,
           ),
         ),
@@ -126,6 +131,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _emailTextField() {
     return TextFormField(
       autocorrect: false,
+      keyboardType: TextInputType.emailAddress,
       style: const TextStyle(color: Colors.white),
       validator: (_input) {
         return _input!.isNotEmpty && _input.contains("@")
@@ -221,7 +227,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: const Text(
                 "LOGIN",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           );

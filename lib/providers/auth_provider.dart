@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names, no_leading_underscores_for_local_identifiers, avoid_print
+// ignore_for_file: constant_identifier_names, no_leading_underscores_for_local_identifiers, avoid_print, use_function_type_syntax_for_parameters, unused_element
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,15 +16,34 @@ enum AuthStatus {
 }
 
 class AuthProvider extends ChangeNotifier {
-  late AuthStatus status;
-  late User? user;
   late FirebaseAuth _auth;
+  late User? user;
+  late AuthStatus? status;
 
   static AuthProvider instance = AuthProvider();
 
   AuthProvider() {
     _auth = FirebaseAuth.instance;
     status = AuthStatus.NotAuthenticated;
+    _checkCurrentUserIsAuthenticated();
+  }
+
+  void _autoLogin() {
+    if (user != null) {
+      // Schedule navigation after the frame is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NavigationService.instance.navigateToReplacment("home");
+      });
+    }
+  }
+
+  void _checkCurrentUserIsAuthenticated() {
+    user = _auth.currentUser;
+    if (user != null) {
+      status = AuthStatus.Authenticated;
+      notifyListeners();
+      _autoLogin();
+    }
   }
 
   void loginUserWithEmailAndPassword(String _email, String _password) async {

@@ -1,5 +1,6 @@
 // ignore_for_file: unused_import, no_leading_underscores_for_local_identifiers, unused_local_variable
 
+import 'package:banterhub/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,8 +19,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   Client client = Client()
-      .setEndpoint("https://cloud.appwrite.io/v1")
-      .setProject("67d0693f00204f5d1590");
+      .setEndpoint(AppConfig.appwriteEndpoint)
+      .setProject(AppConfig.appwriteProjectId);
   Account account = Account(client);
   runApp(const MyApp());
 }

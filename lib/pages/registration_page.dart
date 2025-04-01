@@ -54,15 +54,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
     _deviceWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      body: Container(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ChangeNotifierProvider<AuthProvider>.value(
-              value: AuthProvider.instance,
-              child: _registrationPageUI(),
-            ),
-          ),
+      body: Center(
+        child: ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider.instance,
+          child: _registrationPageUI(),
         ),
       ),
     );
@@ -73,22 +68,34 @@ class _RegistrationPageState extends State<RegistrationPage> {
       builder: (BuildContext _context) {
         _auth = Provider.of<AuthProvider>(_context);
         return SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 30,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: _deviceHeight,
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _deviceWidth * 0.1,
               ),
-              _headingWidget(),
-              _spacer(_deviceHeight * 0.03),
-              _inputFields(),
-              _spacer(_deviceHeight * 0.03),
-              _registerPageButtons(),
-              SizedBox(
-                height: 30,
+              child: IntrinsicHeight(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 30,
+                    ),
+                    _headingWidget(),
+                    _spacer(_deviceHeight * 0.03),
+                    _inputFields(),
+                    _spacer(_deviceHeight * 0.03),
+                    _registerPageButtons(),
+                    SizedBox(
+                      height: 30,
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         );
       },
@@ -227,6 +234,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget _nameTextField() {
     return TextFormField(
       autocorrect: false,
+      keyboardType: TextInputType.name,
+      textCapitalization: TextCapitalization.words,
       style: TextStyle(color: Colors.white),
       validator: (_input) {
         return _input!.isNotEmpty ? null : "Please Enter Name";
@@ -375,7 +384,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
-                    child: Text("Register"),
+                    child: Text(
+                      "Register",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                    ),
                   ),
                 )
               : const Center(

@@ -43,7 +43,8 @@
 //   }
 // }
 
-import 'dart:typed_data';
+// ignore_for_file: unnecessary_brace_in_string_interps, avoid_print
+
 import 'dart:io';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
@@ -57,8 +58,8 @@ class AppWriteStorageService {
 
   AppWriteStorageService()
       : _storage = Storage(Client()
-            .setEndpoint('https://cloud.appwrite.io/v1')
-            .setProject('67d0693f00204f5d1590')
+            .setEndpoint(AppConfig.appwriteEndpoint)
+            .setProject(AppConfig.appwriteProjectId)
             .setSelfSigned(status: true));
 
   // 📌 Mobile: Upload Image as a File
@@ -80,7 +81,7 @@ class AppWriteStorageService {
       //   fileId: uploadedFile.$id,
       // );
       String imageUrl =
-          "https://cloud.appwrite.io/v1/storage/buckets/$_bucketId/files/${uploadedFile.$id}/preview?project=${AppConfig.projectId}";
+          "https://cloud.appwrite.io/v1/storage/buckets/$_bucketId/files/${uploadedFile.$id}/preview?project=${AppConfig.appwriteProjectId}";
 
       print("✅ Image uploaded successfully: $imageUrl");
       return imageUrl;
