@@ -1,16 +1,16 @@
 // ignore_for_file: unused_import, no_leading_underscores_for_local_identifiers, unused_local_variable
 
-import 'package:banterhub/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'firebase_options.dart';
 import 'package:appwrite/appwrite.dart';
+
+import 'firebase_options.dart';
+import 'app_config.dart';
 
 import './pages/login_page.dart';
 import './pages/registration_page.dart';
 import './pages/home_page.dart';
-
 import './services/navigation_service.dart';
 
 void main() async {
@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: Color.fromRGBO(162, 65, 187, 1),
+        primaryColorLight: Color.fromRGBO(182, 114, 199, 1),
         scaffoldBackgroundColor: Color.fromRGBO(28, 27, 27, 1),
       ).copyWith(
         textTheme: GoogleFonts.interTextTheme(

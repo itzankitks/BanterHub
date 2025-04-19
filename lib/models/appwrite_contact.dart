@@ -6,7 +6,7 @@ class AppwriteContact {
   final String name;
   final String email;
   final String image;
-  final String lastSeen;
+  final DateTime lastSeen;
 
   AppwriteContact({
     required this.id,
@@ -23,7 +23,7 @@ class AppwriteContact {
       name: _data["name"],
       email: _data["email"],
       image: _data["image"],
-      lastSeen: _data["lastSeen"],
+      lastSeen: DateTime.parse(_data["lastSeen"]),
     );
   }
 }

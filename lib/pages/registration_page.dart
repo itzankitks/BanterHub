@@ -141,7 +141,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     });
                   } catch (e, stackTrace) {
                     print("Error while reading bytes: $e");
-                    print(stackTrace);
                   }
                 } else {
                   print("Here mobile");
@@ -325,8 +324,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           _auth.status != AuthStatus.Authenticating
               ? Container(
                   height: (_deviceHeight > _deviceWidth)
-                      ? _deviceHeight * 0.06
-                      : _deviceWidth * 0.06,
+                      ? _deviceHeight * 0.05
+                      : _deviceWidth * 0.05,
                   width: _deviceWidth,
                   child: ElevatedButton(
                     onPressed: () async {

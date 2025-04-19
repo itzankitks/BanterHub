@@ -15,15 +15,13 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        height: height,
-        width: width,
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: ChangeNotifierProvider<AuthProvider>.value(
-          value: AuthProvider.instance,
-          child: _profilePageUI(),
-        ),
+    return Container(
+      height: height,
+      width: width,
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: ChangeNotifierProvider<AuthProvider>.value(
+        value: AuthProvider.instance,
+        child: _profilePageUI(),
       ),
     );
   }
@@ -116,9 +114,7 @@ class ProfilePage extends StatelessWidget {
   Widget _logOutButton() {
     return ElevatedButton(
       onPressed: () {
-        _auth.logoutUser(() {
-          
-        });
+        _auth.logoutUser(() {});
       },
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(

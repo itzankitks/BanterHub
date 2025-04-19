@@ -211,7 +211,10 @@ class _LoginPageState extends State<LoginPage> {
             child: CircularProgressIndicator(),
           )
         : SizedBox(
-            width: double.infinity,
+            height: (_deviceHeight > _deviceWidth)
+                ? _deviceHeight * 0.05
+                : _deviceWidth * 0.05,
+            width: _deviceWidth,
             child: ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
@@ -219,7 +222,6 @@ class _LoginPageState extends State<LoginPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: _deviceHeight * 0.015),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),

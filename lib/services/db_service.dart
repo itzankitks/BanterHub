@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/contact.dart';
+import '../models/conversation.dart';
 
 class DBService {
   static DBService instance = DBService();
@@ -14,6 +15,7 @@ class DBService {
   }
 
   String _userCollection = "Users";
+  String _userConversationCollection = "Conversations";
 
   Future<void> createUserInDB(
     String _uid,
@@ -37,6 +39,29 @@ class DBService {
     var ref = _db.collection(_userCollection).doc(_userID);
     return ref.get().asStream().map((_snapshot) {
       return Contact.fromFirestore(_snapshot);
+    });
+  }
+
+  Stream<List<ConversationSnippet>> getUserConversation(String _userID) {
+    var ref = _db
+        .collection(_userCollection)
+        .doc(_userID)
+        .collection(_userConversationCollection);
+    return ref.snapshots().map(
+      (_snapshot) {
+        return _snapshot.docs.map((_doc) {
+          return ConversationSnippet.fromFirestore(_doc);
+        }).toList();
+      },
+    );
+  }
+
+  Stream<List<Contact>> getUserInDB(String _searchName) {
+    var ref = _db.collection(_userCollection);
+    return ref.get().asStream().map((_snapshot) {
+      return _snapshot.docs.map((_doc) {
+        return Contact.fromFirestore(_doc);
+      }).toList();
     });
   }
 }

@@ -1,7 +1,10 @@
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unused_local_variable
 
-import 'package:banterhub/pages/profile_page.dart';
 import 'package:flutter/material.dart';
+
+import '../pages/profile_page.dart';
+import '../pages/recent_conversations_page.dart';
+import '../pages/seacrh_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,7 +30,7 @@ class _HomePageState extends State<HomePage>
 
     _tabController.animation!.addListener(() {
       if (mounted) {
-        setState(() {}); // Updates UI while swiping
+        setState(() {}); // Updates UI while swiping-
       }
     });
   }
@@ -98,8 +101,8 @@ class _HomePageState extends State<HomePage>
     return TabBarView(
       controller: _tabController,
       children: <Widget>[
-        const Text("Users"),
-        const Text("Chats"),
+        SeacrhPage(height: _height, width: _width),
+        RecentConversationsPage(height: _height, width: _width),
         ProfilePage(height: _height, width: _width),
         // ProfilePage(),
       ],

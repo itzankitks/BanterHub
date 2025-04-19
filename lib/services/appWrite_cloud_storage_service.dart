@@ -81,7 +81,7 @@ class AppWriteStorageService {
       //   fileId: uploadedFile.$id,
       // );
       String imageUrl =
-          "https://cloud.appwrite.io/v1/storage/buckets/$_bucketId/files/${uploadedFile.$id}/preview?project=${AppConfig.appwriteProjectId}";
+          "https://cloud.appwrite.io/v1/storage/buckets/$_bucketId/files/${uploadedFile.$id}/view?project=${AppConfig.appwriteProjectId}";
 
       print("✅ Image uploaded successfully: $imageUrl");
       return imageUrl;
