@@ -26,6 +26,11 @@ jobs:
           firebase_options_dart: ${{secrets.FIREBASE_OPTION}}
         run: echo "$firebase_options_dart" > lib/firebase_options.dart
 
+      - name: Decode app_config.dart from secret
+        env:
+          app_config_dart: ${{secrets.APP_CONFIG}}
+        run: echo "$app_config_dart" > lib/app_config.dart
+
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
