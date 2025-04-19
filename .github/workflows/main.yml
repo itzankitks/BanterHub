@@ -15,10 +15,12 @@ jobs:
         with:
           distribution: "zulu"
           java-version: "11"
+
       - name: Decode google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
       - name: Decode firebase_option
         env:
           firebase_options_dart: ${{secrets.FIREBASE_OPTION}}
@@ -27,16 +29,29 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
       - run: flutter pub get
       - run: flutter build apk
-      - uses: actions/upload-artifact@v2
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
         with:
           name: release-apk
           path: build/app/outputs/apk/release/app-release.apk
-      - name: upload artifact to Firebase App Distribution
+
+      - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          appId: ${{secrets.APPID}}
-          token: ${{secrets.TOKEN}}
+          appId: ${{ secrets.APPID }}
+          token: ${{ secrets.TOKEN }}
           groups: pre-tester
           file: build/app/outputs/apk/release/app-release.apk
