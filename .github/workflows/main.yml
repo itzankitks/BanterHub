@@ -46,7 +46,7 @@ jobs:
 
       - run: flutter pub get
       - run: flutter build apk
-      
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -58,6 +58,6 @@ jobs:
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.APPID }}
-          token: ${{ secrets.TOKEN }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: pre-tester
           file: build/app/outputs/apk/release/app-release.apk

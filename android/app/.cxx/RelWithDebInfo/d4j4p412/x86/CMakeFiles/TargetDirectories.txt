@@ -1,0 +1,2 @@
+D:/Projects/BanterHubApp/banterhub/android/app/.cxx/RelWithDebInfo/d4j4p412/x86/CMakeFiles/edit_cache.dir
+D:/Projects/BanterHubApp/banterhub/android/app/.cxx/RelWithDebInfo/d4j4p412/x86/CMakeFiles/rebuild_cache.dir
