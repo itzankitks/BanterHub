@@ -103,7 +103,11 @@ class _SeacrhPageState extends State<SeacrhPage> {
       stream: AppWriteDBService.instance.getUserInAppWriteDB(_searchText),
       builder: (_context, _snapshot) {
         var _usersData = _snapshot.data;
-
+        if (_usersData != null) {
+          _usersData.removeWhere(
+            (_user) => _user.id == _auth.user!.uid,
+          );
+        }
         return _snapshot.hasData
             ? Container(
                 child: ListView.builder(
