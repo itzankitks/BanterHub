@@ -1,4 +1,5 @@
-import 'package:appwrite/appwrite.dart';
+// ignore_for_file: no_leading_underscores_for_local_identifiers, unnecessary_cast
+
 import 'package:appwrite/models.dart';
 
 class AppwriteContact {

@@ -1,3 +1,7 @@
+// ignore_for_file: no_leading_underscores_for_local_identifiers, avoid_unnecessary_containers
+
+import 'package:banterhub/pages/conversation_page.dart';
+import 'package:banterhub/services/navigation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
@@ -115,12 +119,34 @@ class _SeacrhPageState extends State<SeacrhPage> {
                   itemBuilder: (BuildContext _context, int _index) {
                     var _userData = _usersData[_index];
                     var _currentTime = DateTime.now();
+                    var _receiverUserId = _userData.id;
                     var _isUserActive = !_userData.lastSeen.isBefore(
                       _currentTime.subtract(
                         Duration(seconds: 30),
                       ),
                     );
                     return ListTile(
+                      onTap: () async {
+                        await AppWriteDBService.instance
+                            .createOrGetConversationInAppWriteDB(
+                          _auth.user!.uid,
+                          _receiverUserId,
+                          (String _conversarionId) async {
+                            await NavigationService.instance.navigateToRoute(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) {
+                                  return ConversationPage(
+                                    conversationId: _conversarionId,
+                                    receiverUserId: _receiverUserId,
+                                    receiverImageUrl: _userData.image,
+                                    receiverUserName: _userData.name,
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
                       minTileHeight: widget.height > widget.width
                           ? widget.height * 0.08
                           : widget.width * 0.08,
@@ -140,7 +166,6 @@ class _SeacrhPageState extends State<SeacrhPage> {
                             fit: BoxFit.cover,
                           ),
                           shape: BoxShape.circle,
-                          color: Colors.red,
                         ),
                       ),
                       trailing: Column(

@@ -15,6 +15,7 @@ import '../providers/auth_provider.dart';
 import '../services/navigation_service.dart';
 import '../services/media_service.dart';
 import '../services/cloud_storage_service.dart';
+import '../services/snackbar_service.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -66,6 +67,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget _registrationPageUI() {
     return Builder(
       builder: (BuildContext _context) {
+        SnackBarService.instance.buildContext = _context;
         _auth = Provider.of<AuthProvider>(_context);
         return SingleChildScrollView(
           child: ConstrainedBox(
@@ -139,7 +141,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       _imageBytes = bytes;
                       _image = null; // Ensure mobile image is null
                     });
-                  } catch (e, stackTrace) {
+                  } catch (e) {
                     print("Error while reading bytes: $e");
                   }
                 } else {

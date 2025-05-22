@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:banterhub/app_config.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
+import 'package:banterhub/models/appwrite_message.dart';
 
 import '../models/appwrite_conversations_model.dart';
 import '../models/appwrite_contact.dart';
@@ -26,6 +27,8 @@ class AppWriteDBService {
 
   String _databaseId = AppConfig.appwriteDatabaseId;
   String _userCollectionId = AppConfig.appwriteUsersCollectionId;
+  String _conversationCollectionId =
+      AppConfig.appwriteConversationsCollectionId;
 
   Future<bool> createUserInAppWriteDB(
     String _uid,
@@ -50,6 +53,106 @@ class AppWriteDBService {
     } catch (e) {
       print("❌ Error creating user in DB: $e");
       return false;
+    }
+  }
+
+  Future<void> updateUserInAppWriteDB(
+    String uid,
+    String? name,
+    String? email,
+    String? imageURL,
+  ) async {
+    try {
+      final Map<String, dynamic> data = {
+        "lastSeen": DateTime.now().toIso8601String(),
+      };
+
+      if (name != null) data["name"] = name;
+      if (email != null) data["email"] = email;
+      if (imageURL != null) data["image"] = imageURL;
+
+      await _appWriteDB.updateDocument(
+        databaseId: _databaseId,
+        collectionId: _userCollectionId,
+        documentId: uid,
+        data: data,
+      );
+    } catch (e) {
+      print("Error updating user in DB: $e");
+    }
+  }
+
+  Future<void> createOrGetConversationInAppWriteDB(
+    String currentUserId,
+    String receiverUserId,
+    Future<void> Function(String conversationId) onSuccess,
+  ) async {
+    try {
+      // 🔍 Step 1: Check if conversation already exists
+      final result = await _appWriteDB.listDocuments(
+        databaseId: _databaseId,
+        collectionId: _conversationCollectionId,
+        queries: [
+          Query.contains('members', currentUserId),
+          Query.contains('members', receiverUserId),
+        ],
+      );
+      print("currentUserId: $currentUserId");
+      print("receiverUserId: $receiverUserId");
+      print("result: ${result.documents.asMap()}");
+
+      if (result.documents.isNotEmpty) {
+        final existingConversationId = result.documents.first.$id;
+        print("existingConversationId: $existingConversationId");
+        await onSuccess(existingConversationId);
+      } else {
+        final newConversation = await _appWriteDB.createDocument(
+          databaseId: _databaseId,
+          collectionId: _conversationCollectionId,
+          documentId: ID.unique(),
+          data: {
+            'members': [currentUserId, receiverUserId],
+            'messages': [],
+            'ownerId': currentUserId,
+          },
+        );
+
+        await onSuccess(newConversation.$id);
+      }
+    } catch (e) {
+      print("Error creating or getting conversation: $e");
+    }
+  }
+
+  Future<void> sendMessageInAppWriteDB(
+    String _conversationId,
+    AppwriteMessage _message,
+  ) async {
+    try {
+      final doc = await _appWriteDB.getDocument(
+        databaseId: _databaseId,
+        collectionId: _conversationCollectionId,
+        documentId: _conversationId,
+      );
+
+      print("doc: ${doc.data['messages'].runtimeType}");
+
+      final messages = doc.data['messages'] as List<dynamic>? ?? [];
+      messages.add(jsonEncode({
+        'senderId': _message.senderId,
+        'message': _message.content,
+        'type': _message.type == AppwriteMessageType.Text ? 'text' : 'image',
+        'timeStamp': _message.timeStamp.toIso8601String(),
+      }));
+
+      await _appWriteDB.updateDocument(
+        databaseId: _databaseId,
+        collectionId: _conversationCollectionId,
+        documentId: _conversationId,
+        data: {'messages': messages},
+      );
+    } catch (e) {
+      print("Error adding message in DB: $e");
     }
   }
 
@@ -93,10 +196,10 @@ class AppWriteDBService {
   }
 
   /// ✅ **Fetches & streams real-time conversations for a user**
-  Stream<List<AppwriteConversations>> getAppWriteUserConversation(
+  Stream<List<AppwriteConversationsSnippet>> getAppWriteUserConversation(
       String _userID) {
-    final StreamController<List<AppwriteConversations>> _controller =
-        StreamController<List<AppwriteConversations>>();
+    final StreamController<List<AppwriteConversationsSnippet>> _controller =
+        StreamController<List<AppwriteConversationsSnippet>>.broadcast();
 
     final realtime = Realtime(_client);
     final subscription = realtime.subscribe([
@@ -114,8 +217,9 @@ class AppWriteDBService {
         if (response.data.containsKey("conversations")) {
           List<dynamic> conversationsData = response.data["conversations"];
 
-          List<AppwriteConversations> conversations = conversationsData
-              .map((json) => AppwriteConversations.fromJson(jsonDecode(json)))
+          List<AppwriteConversationsSnippet> conversations = conversationsData
+              .map((json) =>
+                  AppwriteConversationsSnippet.fromJson(jsonDecode(json)))
               .toList();
 
           _controller.sink.add(conversations);
@@ -130,8 +234,7 @@ class AppWriteDBService {
     _fetchConversations();
 
     subscription.stream.listen((event) async {
-      if (event.events
-          .contains("databases.*.collections.*.documents.*.update")) {
+      if (event.events.any((e) => e.contains("update"))) {
         await _fetchConversations();
       }
     });
@@ -172,29 +275,44 @@ class AppWriteDBService {
     return _controller.stream;
   }
 
-  // Stream<AppwriteContact> getAppWriteUserData(String _userID) {
-  //   // Creating a StreamController to emit updates to the Stream
-  //   final StreamController<AppwriteContact> _controller =
-  //       StreamController<AppwriteContact>();
+  Stream<AppwriteConversation> getConversationInAppWriteDB(
+      String conversationId) {
+    final StreamController<AppwriteConversation> _controller =
+        StreamController<AppwriteConversation>.broadcast();
 
-  //   Future<void> _fetchData() async {
-  //     try {
-  //       final response = await _appWriteDB.getDocument(
-  //         databaseId: _databaseId,
-  //         collectionId: _userCollectionId,
-  //         documentId: _userID,
-  //       );
-  //       _controller.sink.add(AppwriteContact.fromAppwrite(response));
-  //     } catch (e) {
-  //       _controller.sink.addError(e);
-  //     }
-  //   }
+    final realtime = Realtime(_client);
+    final subscription = realtime.subscribe([
+      'databases.$_databaseId.collections.${AppConfig.appwriteConversationsCollectionId}.documents.$conversationId'
+    ]);
 
-  //   // Periodically fetch the data (e.g., every 5 seconds)
-  //   // Timer.periodic(Duration(seconds: 5), (_) {
-  //   _fetchData();
-  //   // });
+    Future<void> _fetchConversation() async {
+      try {
+        final response = await _appWriteDB.getDocument(
+          databaseId: _databaseId,
+          collectionId: AppConfig.appwriteConversationsCollectionId,
+          documentId: conversationId,
+        );
 
-  //   return _controller.stream;
-  // }
+        AppwriteConversation conversation =
+            AppwriteConversation.fromAppwrite(response);
+        _controller.sink.add(conversation);
+      } catch (e) {
+        _controller.sink.addError(e);
+      }
+    }
+
+    _fetchConversation(); // initial fetch
+
+    subscription.stream.listen((event) async {
+      if (event.events.any((e) => e.contains("update"))) {
+        await _fetchConversation();
+      }
+    });
+
+    _controller.onCancel = () {
+      subscription.close();
+    };
+
+    return _controller.stream;
+  }
 }

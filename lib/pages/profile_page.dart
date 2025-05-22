@@ -83,7 +83,7 @@ class ProfilePage extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(_image),
-          fit: BoxFit.fill,
+          fit: BoxFit.cover,
         ),
         shape: BoxShape.circle,
         // color: Colors.red,

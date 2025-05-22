@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import '../services/snackbar_service.dart';
 import '../services/navigation_service.dart';
+import '../services/appWrite_db_service.dart';
 
 enum AuthStatus {
   NotAuthenticated,
@@ -25,24 +26,30 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _auth = FirebaseAuth.instance;
     status = AuthStatus.NotAuthenticated;
-    _checkCurrentUserIsAuthenticated();
+    checkCurrentUserIsAuthenticated();
   }
 
-  void _autoLogin() {
-    if (user != null) {
-      // Schedule navigation after the frame is built
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        NavigationService.instance.navigateToReplacment("home");
-      });
-    }
-  }
-
-  void _checkCurrentUserIsAuthenticated() {
+  Future<void> checkCurrentUserIsAuthenticated() async {
     user = _auth.currentUser;
     if (user != null) {
       status = AuthStatus.Authenticated;
       notifyListeners();
-      _autoLogin();
+      await _autoLogin();
+    }
+  }
+
+  Future<void> _autoLogin() async {
+    if (user != null) {
+      await AppWriteDBService.instance.updateUserInAppWriteDB(
+        user!.uid,
+        null,
+        null,
+        null,
+      );
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NavigationService.instance.navigateToReplacment("home");
+      });
     }
   }
 
@@ -63,6 +70,12 @@ class AuthProvider extends ChangeNotifier {
         msg: "Welcome back, ${user!.email}",
       );
       // update lastSeen time
+      await AppWriteDBService.instance.updateUserInAppWriteDB(
+        user!.uid,
+        null,
+        null,
+        null,
+      );
 
       // Navigate to the home page
       NavigationService.instance.navigateToReplacment("home");
@@ -103,6 +116,12 @@ class AuthProvider extends ChangeNotifier {
         msg: "Welcome to BanterHub",
       );
       // update lastSeen time
+      await AppWriteDBService.instance.updateUserInAppWriteDB(
+        user!.uid,
+        null,
+        null,
+        null,
+      );
 
       NavigationService.instance.goBack();
       // navigate to home page
@@ -135,13 +154,3 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-
-
-// Fluttertoast.showToast(
-//   msg: "Welcome to BanterHub",
-//   toastLength: Toast.LENGTH_SHORT,
-//   gravity: ToastGravity.BOTTOM,
-//   backgroundColor: Colors.green,
-//   textColor: Colors.white,
-//   fontSize: 16.0,
-// );

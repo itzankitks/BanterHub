@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:banterhub/models/appwrite_conversations_model.dart';
+import 'package:banterhub/models/appwrite_message.dart';
+import 'package:banterhub/pages/conversation_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../providers/auth_provider.dart';
 import '../services/appWrite_db_service.dart';
+import '../services/navigation_service.dart';
 
 class RecentConversationsPage extends StatefulWidget {
   final double height;
@@ -45,45 +48,68 @@ class _RecentConversationsPageState extends State<RecentConversationsPage> {
           height: widget.height,
           width: widget.width,
           color: Theme.of(context).scaffoldBackgroundColor,
-          child: StreamBuilder<List<AppwriteConversations>>(
+          child: StreamBuilder<List<AppwriteConversationsSnippet>>(
             stream: AppWriteDBService.instance
                 .getAppWriteUserConversation(_auth.user!.uid),
-            builder: (_context, _snapshot) {
-              var _userConversationData = _snapshot.data;
-              return _snapshot.hasData
-                  ? ListView.builder(
-                      itemCount: _userConversationData!.length,
-                      itemBuilder: (_context, _index) {
-                        return ListTile(
-                          onTap: () {},
-                          title: Text(
-                            _userConversationData[_index].name,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          subtitle: Text(
-                            _userConversationData[_index].lastMessage,
-                            style: TextStyle(
-                              fontSize: 12,
-                            ),
-                          ),
-                          leading: _listTileLeadingWidget(
-                            _userConversationData[_index].image,
-                          ),
-                          trailing: _listTileTrailingWidget(
-                            _userConversationData[_index].timeStamp,
-                          ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: SpinKitWanderingCubes(
-                        color: Theme.of(_context).primaryColor,
-                        size: 50.0,
+            builder: (_context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: SpinKitWanderingCubes(
+                    color: Theme.of(context).primaryColor,
+                    size: 50.0,
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('No conversations found.'));
+              }
+
+              final conversations = snapshot.data!;
+              return ListView.builder(
+                itemCount: conversations.length,
+                itemBuilder: (context, index) {
+                  final convo = conversations[index];
+                  // print("conversations: ${convo.lastMessage}");
+                  return ListTile(
+                    onTap: () {
+                      NavigationService.instance.navigateToRoute(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) {
+                            return ConversationPage(
+                              conversationId: convo.conversationId,
+                              receiverUserId: convo.id,
+                              receiverImageUrl: convo.image,
+                              receiverUserName: convo.name,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    title: Text(
+                      convo.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                       ),
-                    );
+                    ),
+                    subtitle: Text(
+                      convo.type == AppwriteMessageType.Text
+                          ? convo.lastMessage
+                          : "Attachment: Image",
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    leading: _listTileLeadingWidget(convo.image),
+                    trailing: _listTileTrailingWidget(convo.timeStamp),
+                  );
+                },
+              );
             },
           ),
         );
@@ -113,17 +139,15 @@ class _RecentConversationsPageState extends State<RecentConversationsPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          timeago.format(_lastMessageTimeStamp),
+          "Last Message",
           style: TextStyle(
             fontSize: 10,
           ),
         ),
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColorLight,
-            shape: BoxShape.circle,
+        Text(
+          timeago.format(_lastMessageTimeStamp),
+          style: TextStyle(
+            fontSize: 10,
           ),
         ),
       ],
